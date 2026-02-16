@@ -186,6 +186,10 @@ const Home = () => {
             <Button type="submit" className="flex w-full cursor-pointer!">Generate Completion Schedule</Button>
           </form>
         </section>
+
+        <footer className="fixed bottom-0 p-2 text-xs bg-[rgba(255,255,255,0.5)]">
+          Icons by <a target="_blank" href="https://icons8.com">Icons8</a>
+        </footer>
       </main>
     </>
   )
