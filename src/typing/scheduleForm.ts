@@ -1,6 +1,6 @@
 export interface ScheduleForm {
-    startRange: number
-    endRange: number
+    rangeStart: number
+    rangeEnd: number
     tahajjudChecked: boolean
     fajrChecked: boolean
     zuhrChecked: boolean

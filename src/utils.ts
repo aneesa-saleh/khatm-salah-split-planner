@@ -1,8 +1,136 @@
-import QURAN_DATA, { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER } from "../data/quranData";
+import QURAN_DATA, { FIRST_JUZ_NUMBER, FIRST_PAGE_NUMBER, LAST_JUZ_NUMBER, LAST_PAGE_NUMBER } from "../data/quranData";
+import type { JuzListItem, VerseCollectionListItem } from "./typing/quranData";
+import type { DaySchedule, SalahRange } from "./typing/schedule";
+import type { ScheduleForm } from "./typing/scheduleForm";
 
-export const getJuzListInRange = (
-    { rangeStart = FIRST_JUZ_NUMBER, rangeEnd = LAST_JUZ_NUMBER }: { rangeStart?: number; rangeEnd?: number }
-) => {
-    const juzs = QURAN_DATA?.juzs?.references;
-    return juzs
+export function getJuzInfo(juzNumber: number): JuzListItem {
+    if (juzNumber > LAST_JUZ_NUMBER || juzNumber < FIRST_JUZ_NUMBER) return {start: { ayah: 1, page: 1, surah: 1}, end: { ayah: 1, page: 1, surah: 1}};
+
+    return QURAN_DATA?.juzs?.references[juzNumber - 1];
+}
+
+export function getPageInfo(pageNumber: number): VerseCollectionListItem {
+    if (pageNumber > LAST_PAGE_NUMBER || pageNumber < FIRST_PAGE_NUMBER) return { ayah: 1, surah: 1 };
+
+    return QURAN_DATA?.pages?.references[pageNumber - 1];
+}
+
+
+export function getSurahName (surahNumber: number) {
+    if (surahNumber > 114 || surahNumber < 1) return "";
+
+    return QURAN_DATA?.surahs?.references[surahNumber - 1]?.englishName;
+}
+
+const SALAH_ORDER = [
+  "tahajjud",
+  "fajr",
+  "zuhr",
+  "asr",
+  "maghrib",
+  "isha",
+] as const;
+
+type SalahKey = typeof SALAH_ORDER[number];
+
+export function getSelectedSalahs(form: ScheduleForm): SalahKey[] {
+  return SALAH_ORDER.filter((salah) => {
+    return form[`${salah}Checked` as keyof ScheduleForm] === true;
+  });
+}
+
+export function splitEvenly(total: number, parts: number): number[] {
+  const base = Math.floor(total / parts);
+  const remainder = total % parts;
+
+  return Array.from({ length: parts }, (_, i) =>
+    i < remainder ? base + 1 : base
+  );
+}
+
+export function generateRevisionSchedule(
+  form: ScheduleForm,
+  pageSplitPreset?: number,
+): DaySchedule[] {
+  const startJuz = form.rangeStart;
+  const endJuz = form.rangeEnd;
+  const days = Number(form.daysToComplete);
+
+  // Resolve page range
+  const startJuzInfo = getJuzInfo(startJuz);
+  const endJuzInfo = getJuzInfo(endJuz);
+
+  const startPage = startJuzInfo.start.page;
+  const endPage = endJuzInfo.end.page;
+
+  const totalPages = endPage - startPage + 1;
+
+  const pagesPerDay = splitEvenly(totalPages, days);
+
+  const selectedSalahs = getSelectedSalahs(form);
+
+  let currentPage = startPage;
+  const schedule: DaySchedule[] = [];
+
+  for (let dayIndex = 0; dayIndex < days; dayIndex++) {
+    const dayPages = pagesPerDay[dayIndex];
+    const dayStartPage = currentPage;
+    const dayEndPage = currentPage + dayPages - 1;
+
+    // Split day pages across salahs
+    const pagesPerSalah = splitEvenly(
+      dayPages,
+      selectedSalahs.length
+    );
+
+    let salahPageCursor = dayStartPage;
+
+    const salahRanges: Partial<Record<SalahKey, SalahRange>> = {};
+
+    selectedSalahs.forEach((salah, i) => {
+      const count = pagesPerSalah[i];
+      const salahStartPage = salahPageCursor;
+      const salahEndPage = salahPageCursor + count - 1;
+
+      const startMeta = getPageInfo(salahStartPage);
+      const endMeta = getPageInfo(salahEndPage);
+
+      salahRanges[salah] = {
+        start: `Page ${salahStartPage} (starts: ${getSurahName(
+          startMeta.surah
+        )} ${startMeta.surah}:${startMeta.ayah})`,
+        end: `Page ${salahEndPage} (starts: ${getSurahName(
+          endMeta.surah
+        )} ${endMeta.surah}:${endMeta.ayah})`,
+        totalPages: dayPages,
+      };
+
+      salahPageCursor += count;
+    });
+
+    // 5️⃣ Build day object
+    const dayStartMeta = getPageInfo(dayStartPage);
+    const dayEndMeta = getPageInfo(dayEndPage);
+
+    schedule.push({
+      day: dayIndex + 1,
+      totalPages: dayPages,
+      start: `Page ${dayStartPage} (starts: ${getSurahName(
+        dayStartMeta.surah
+      )} ${dayStartMeta.surah}:${dayStartMeta.ayah})`,
+      end: `Page ${dayEndPage} (starts: ${getSurahName(
+        dayEndMeta.surah
+      )} ${dayEndMeta.surah}:${dayEndMeta.ayah})`,
+      tahajjud: salahRanges.tahajjud ?? null,
+      fajr: salahRanges.fajr ?? null,
+      zuhr: salahRanges.zuhr ?? null,
+      asr: salahRanges.asr ?? null,
+      maghrib: salahRanges.maghrib ?? null,
+      isha: salahRanges.isha ?? null,
+    });
+
+    currentPage = dayEndPage + 1;
+  }
+
+  return schedule;
 }

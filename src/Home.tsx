@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button } from '@radix-ui/themes';
 
-import QURAN_DATA, { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER } from "../data/quranData";
+import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER } from "../data/quranData";
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
+import { generateRevisionSchedule } from './utils';
 
 const defaultFormValues: ScheduleForm = {
-  startRange: FIRST_JUZ_NUMBER,
-  endRange: LAST_JUZ_NUMBER,
+  rangeStart: FIRST_JUZ_NUMBER,
+  rangeEnd: LAST_JUZ_NUMBER,
   tahajjudChecked: false,
   fajrChecked: true,
   zuhrChecked: true,
@@ -27,8 +28,8 @@ const Home = () => {
   const [daysToCompleteError, setDaysToCompleteError] = useState('');
 
   const handleJuzRangeChange = (range: number[]) => {
-    form.setValue('startRange', range[0])
-    form.setValue('endRange', range[1])
+    form.setValue('rangeStart', range[0])
+    form.setValue('rangeEnd', range[1])
   }
 
   const validateSalahSelection = () => {
@@ -73,7 +74,7 @@ const Home = () => {
 
     if (!isDaysToCompleteValid || !isSalahSelectionValid) return;
 
-    console.log(data);
+    console.log(generateRevisionSchedule(data));
   }
 
   return (
@@ -89,16 +90,16 @@ const Home = () => {
             <div className='w-full flex flex-col gap-1'>
               <p className="text-sm">Select Juz Range:</p>
               <div className="w-full flex gap-2 items-center whitespace-nowrap">
-                <p>Juz {form?.watch('startRange')}</p>
+                <p>Juz {form?.watch('rangeStart')}</p>
                 <Slider
                   onValueChange={handleJuzRangeChange}
-                  defaultValue={[form?.watch('startRange'), form?.watch('endRange')]}
+                  defaultValue={[form?.watch('rangeStart'), form?.watch('rangeEnd')]}
                   step={1}
                   min={FIRST_JUZ_NUMBER}
                   max={LAST_JUZ_NUMBER}
                   radius="small"
                 />
-                <p>Juz {form?.watch('endRange')}</p>
+                <p>Juz {form?.watch('rangeEnd')}</p>
               </div>
             </div>
 
