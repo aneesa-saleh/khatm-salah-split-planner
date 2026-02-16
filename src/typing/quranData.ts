@@ -13,10 +13,24 @@ export interface VerseCollectionListItem {
     ayah: number
 }
 
+export interface JuzPosition extends VerseCollectionListItem {
+    page: number
+}
+
+export interface JuzListItem {
+    start: JuzPosition
+    end: JuzPosition
+}
+
 export interface VerseCollection {
-        count: number
-        references: VerseCollectionListItem[]
-    }
+    count: number
+    references: VerseCollectionListItem[]
+}
+
+export interface JuzList  {
+    count: number
+    references: JuzListItem[]
+}
 
 export interface QuranData {
     ayahs: {
@@ -28,5 +42,5 @@ export interface QuranData {
     }
     pages: VerseCollection,
     hizbQuarters: VerseCollection,
-    juzs: VerseCollection,
+    juzs: JuzList,
 }

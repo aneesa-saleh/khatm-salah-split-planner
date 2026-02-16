@@ -10,11 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/themes": "^3.3.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/vite": "^4.1.18",
     "@typescript-eslint/parser": "^8.54.0",
+    "classnames": "^2.5.1",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.71.1",
+    "react-select": "^5.10.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
