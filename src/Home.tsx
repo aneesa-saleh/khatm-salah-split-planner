@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button } from '@radix-ui/themes';
-import cn from 'classnames';
 
 import QURAN_DATA, { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER } from "../data/quranData";
 import type { ScheduleForm } from './typing/scheduleForm';
@@ -79,9 +78,9 @@ const Home = () => {
 
   return (
     <>
-      <main className="flex flex-col gap-2 h-screen w-screen items-center justify-center">
+      <main className="flex flex-col gap-2 h-screen w-screen items-center justify-center m-5">
         <h1>Khatm by Salah Planner</h1>
-        <div className="mt-2">
+        <div>
           <p>Create Qur'an Khatm Schedule planned for each day</p>
         </div>
 
