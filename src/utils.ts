@@ -137,6 +137,8 @@ export function formatSalahCell(salahData: {
   end: string
   totalPages: number
 }) {
+  if (salahData?.totalPages === 0) return '';
+  
   return `[${salahData?.totalPages} ${salahData?.totalPages == 1 ? 'page' : 'pages'}]\n${salahData?.start} to\n${salahData?.end}`
 }
 
@@ -159,7 +161,11 @@ export function buildExcelTable(schedule: DaySchedule[]) {
   ]
 
   // Data rows
-  const DATA_ROWS = schedule.map(day => {
+  let DATA_ROWS: any[] = [];
+
+  schedule.forEach(day => {
+    if (day?.totalPages === 0) return;
+
     const baseCells = [
       { type: String, value: `Day ${day.day}`,  },
       { type: String, value: formatSalahCell(day), wrap: true },
@@ -175,7 +181,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
       }
     })
 
-    return [...baseCells, ...salahCells]
+    DATA_ROWS.push([...baseCells, ...salahCells]);
   })
 
   // Final structure for write-excel-file
@@ -195,6 +201,9 @@ export const columnConfig = [
 ];
 
 export function getScheduleFileName({ startJuz, endJuz, dayCount}: {startJuz: number, endJuz: number, dayCount: number}) {
-  return `Juz ${startJuz} to ${endJuz} in ${dayCount} days`;
+  const dayLabel = dayCount === 1 ? 'day' : 'days';
+  if (startJuz === endJuz) return `Juz ${startJuz} in ${dayCount} ${dayLabel}`;
+
+  return `Juz ${startJuz} to ${endJuz} in ${dayCount} ${dayLabel}`;
 }
 

@@ -80,9 +80,16 @@ const Home = () => {
       const schedule = generateRevisionSchedule(data)
       const spreadsheetData = buildExcelTable(schedule)
 
+      // user may enter a number too large to fill all the days
+      // the spreadsheet will have the blank rows trimmed, so subtract the header row to get the data row count
+      const dataRowCount = spreadsheetData?.length - 1;
+      
+
       writeXlsxFile(spreadsheetData as any, {
         columns: columnConfig,
-        fileName: getScheduleFileName({ startJuz: data?.rangeStart, endJuz: data?.rangeEnd, dayCount: Number(data?.daysToComplete) }),
+        fileName: getScheduleFileName({
+          startJuz: data?.rangeStart, endJuz: data?.rangeEnd, dayCount: Math.min(Number(data?.daysToComplete), dataRowCount)
+        }),
         stickyRowsCount: 1,
         stickyColumnsCount: 1
       })
