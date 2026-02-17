@@ -7,6 +7,7 @@ import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
 import quranImage from "@/assets/images/quran.svg";
+import githubIcon from "@/assets/icons/github.svg";
 import { buildExcelTable, columnConfig, generateRevisionSchedule, getScheduleFileName } from './utils';
 
 const defaultFormValues: ScheduleForm = {
@@ -225,8 +226,14 @@ const Home = () => {
           </form>
         </section>
 
-        <footer className="fixed bottom-0 p-2 text-xs bg-[rgba(255,255,255,0.5)]">
-          Icons by <a target="_blank" href="https://icons8.com">Icons8</a>
+        <footer className="flex gap-3 fixed bottom-0 p-2 text-xs bg-[rgba(255,255,255,0.5)] items-center">
+          <span>
+            <a target="_blank" href="https://github.com/aneesa-saleh/khatm-salah-split-planner/issues" className="flex gap-1 items-center">
+              <img src={githubIcon} width={20} height={20} alt="Link to Github" /> <span className="tracking-wider">Feedback/Contribution</span>
+            </a>
+          </span>
+          <span> | </span>
+          <span>Icons by <a target="_blank" href="https://icons8.com">Icons8</a></span>
         </footer>
       </main>
     </>
