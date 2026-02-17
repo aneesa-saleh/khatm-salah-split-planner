@@ -4507,4 +4507,6 @@ export const LAST_PAGE_NUMBER = 604;
 export const FIRST_JUZ_NUMBER = 1;
 export const LAST_JUZ_NUMBER = 30;
 
+export const MAX_COMPLETION_DAYS = 365;
+
 export default QURAN_DATA;
