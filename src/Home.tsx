@@ -82,11 +82,10 @@ const Home = () => {
 
       writeXlsxFile(spreadsheetData as any, {
         columns: columnConfig,
-        fileName: getScheduleFileName({ startJuz: data?.rangeStart, endJuz: data?.rangeEnd, dayCount: Number(data?.daysToComplete) })
+        fileName: getScheduleFileName({ startJuz: data?.rangeStart, endJuz: data?.rangeEnd, dayCount: Number(data?.daysToComplete) }),
+        stickyRowsCount: 1,
+        stickyColumnsCount: 1
       })
-
-      console.log(schedule);
-      console.log(spreadsheetData);
     } catch (e) {
       alert('An error occurred! Please try again.')
       console.log(e);

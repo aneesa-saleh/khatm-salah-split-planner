@@ -32,6 +32,17 @@ export interface JuzList  {
     references: JuzListItem[]
 }
 
+export interface PageListItem {
+    page: number,
+    start: VerseCollectionListItem,
+    end: VerseCollectionListItem
+}
+
+export interface PageList {
+    count: number
+    references: PageListItem[]
+}
+
 export interface QuranData {
     ayahs: {
         count: number
@@ -40,7 +51,7 @@ export interface QuranData {
         count: number
         references: Surah[]
     }
-    pages: VerseCollection,
+    pages: PageList,
     hizbQuarters: VerseCollection,
     juzs: JuzList,
 }

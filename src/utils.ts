@@ -1,5 +1,5 @@
 import QURAN_DATA, { FIRST_JUZ_NUMBER, FIRST_PAGE_NUMBER, LAST_JUZ_NUMBER, LAST_PAGE_NUMBER } from "../data/quranData";
-import type { JuzListItem, VerseCollectionListItem } from "./typing/quranData";
+import type { JuzListItem, PageListItem } from "./typing/quranData";
 import type { DaySchedule, SalahRange } from "./typing/schedule";
 import type { ScheduleForm } from "./typing/scheduleForm";
 
@@ -9,8 +9,8 @@ export function getJuzInfo(juzNumber: number): JuzListItem {
     return QURAN_DATA?.juzs?.references[juzNumber - 1];
 }
 
-export function getPageInfo(pageNumber: number): VerseCollectionListItem {
-    if (pageNumber > LAST_PAGE_NUMBER || pageNumber < FIRST_PAGE_NUMBER) return { ayah: 1, surah: 1 };
+export function getPageInfo(pageNumber: number): PageListItem {
+    if (pageNumber > LAST_PAGE_NUMBER || pageNumber < FIRST_PAGE_NUMBER) return QURAN_DATA?.pages?.references[0];
 
     return QURAN_DATA?.pages?.references[pageNumber - 1];
 }
@@ -20,6 +20,16 @@ export function getSurahName (surahNumber: number) {
     if (surahNumber > 114 || surahNumber < 1) return "";
 
     return QURAN_DATA?.surahs?.references[surahNumber - 1]?.englishName;
+}
+
+export function formatPageVerseRange (pageNumber: number) {
+  const page = QURAN_DATA?.pages?.references[pageNumber - 1] || QURAN_DATA?.pages?.references[0]
+
+  return `Page ${page?.page} (${getSurahName(
+        page?.start?.surah
+      )} ${page?.start?.surah}:${page?.start?.ayah} → ${getSurahName(
+        page?.end?.surah
+      )} ${page?.end?.surah}:${page?.end?.ayah})`
 }
 
 const SALAH_ORDER = [
@@ -92,35 +102,20 @@ export function generateRevisionSchedule(
       const salahStartPage = salahPageCursor;
       const salahEndPage = salahPageCursor + salahPageCount - 1;
 
-      const startMeta = getPageInfo(salahStartPage);
-      const endMeta = getPageInfo(salahEndPage);
-
       salahRanges[salah] = {
-        start: `Page ${salahStartPage} (starts: ${getSurahName(
-          startMeta.surah
-        )} ${startMeta.surah}:${startMeta.ayah})`,
-        end: `Page ${salahEndPage} (starts: ${getSurahName(
-          endMeta.surah
-        )} ${endMeta.surah}:${endMeta.ayah})`,
+        start: formatPageVerseRange(salahStartPage),
+        end: formatPageVerseRange(salahEndPage),
         totalPages: salahPageCount,
       };
 
       salahPageCursor += salahPageCount;
     });
 
-    // 5️⃣ Build day object
-    const dayStartMeta = getPageInfo(dayStartPage);
-    const dayEndMeta = getPageInfo(dayEndPage);
-
     schedule.push({
       day: dayIndex + 1,
       totalPages: dayPages,
-      start: `Page ${dayStartPage} (starts: ${getSurahName(
-        dayStartMeta.surah
-      )} ${dayStartMeta.surah}:${dayStartMeta.ayah})`,
-      end: `Page ${dayEndPage} (starts: ${getSurahName(
-        dayEndMeta.surah
-      )} ${dayEndMeta.surah}:${dayEndMeta.ayah})`,
+      start: formatPageVerseRange(dayStartPage),
+      end: formatPageVerseRange(dayEndPage),
       tahajjud: salahRanges.tahajjud ?? null,
       fajr: salahRanges.fajr ?? null,
       zuhr: salahRanges.zuhr ?? null,
@@ -142,7 +137,7 @@ export function formatSalahCell(salahData: {
   end: string
   totalPages: number
 }) {
-  return `[${salahData.totalPages} pages]\n${salahData.start} to\n${salahData.end}`
+  return `[${salahData.totalPages} pages]\n${salahData?.start} to\n${salahData?.end}`
 }
 
 const SALAHS = ['tahajjud', 'fajr', 'zuhr', 'asr', 'maghrib', 'isha'] as const
@@ -166,7 +161,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
   // Data rows
   const DATA_ROWS = schedule.map(day => {
     const baseCells = [
-      { type: Number, value: day.day,  },
+      { type: String, value: `Day ${day.day}`,  },
       { type: String, value: formatSalahCell(day), wrap: true },
     ]
 
@@ -187,7 +182,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
   return [HEADER_ROW, ...DATA_ROWS]
 }
 
-const COLUMN_WIDTH = 35;
+const COLUMN_WIDTH = 50;
 export const columnConfig = [
   {},
   { width: COLUMN_WIDTH },
