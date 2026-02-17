@@ -80,7 +80,7 @@ const Home = () => {
 
   return (
     <>
-      <main className="flex flex-col gap-2.5 h-screen w-screen items-center justify-center m-5">
+      <main className="flex flex-col gap-2.5 h-screen w-screen items-center justify-center p-5">
         <div className="flex gap-1.5 items-center">
           <img src={quranImage} width={50} height={50} alt="" /> {salahSelectionError}
           <h1 className="whitespace-nowrap text-2xl! sm:text-4xl! tracking-wider text-center font-extrabold">Khatm by Salah Planner</h1>
