@@ -184,7 +184,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
 
 const COLUMN_WIDTH = 50;
 export const columnConfig = [
-  {},
+  { width: 8 },
   { width: COLUMN_WIDTH },
   { width: COLUMN_WIDTH },
   { width: COLUMN_WIDTH },
