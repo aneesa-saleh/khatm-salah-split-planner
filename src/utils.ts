@@ -88,9 +88,9 @@ export function generateRevisionSchedule(
     const salahRanges: Partial<Record<SalahKey, SalahRange>> = {};
 
     selectedSalahs.forEach((salah, i) => {
-      const count = pagesPerSalah[i];
+      const salahPageCount = pagesPerSalah[i];
       const salahStartPage = salahPageCursor;
-      const salahEndPage = salahPageCursor + count - 1;
+      const salahEndPage = salahPageCursor + salahPageCount - 1;
 
       const startMeta = getPageInfo(salahStartPage);
       const endMeta = getPageInfo(salahEndPage);
@@ -102,10 +102,10 @@ export function generateRevisionSchedule(
         end: `Page ${salahEndPage} (starts: ${getSurahName(
           endMeta.surah
         )} ${endMeta.surah}:${endMeta.ayah})`,
-        totalPages: dayPages,
+        totalPages: salahPageCount,
       };
 
-      salahPageCursor += count;
+      salahPageCursor += salahPageCount;
     });
 
     // 5️⃣ Build day object
@@ -142,7 +142,7 @@ export function formatSalahCell(salahData: {
   end: string
   totalPages: number
 }) {
-  return `${salahData.start} to ${salahData.end} (${salahData.totalPages} pages)`
+  return `[${salahData.totalPages} pages]\n${salahData.start} to\n${salahData.end}`
 }
 
 const SALAHS = ['tahajjud', 'fajr', 'zuhr', 'asr', 'maghrib', 'isha'] as const
@@ -156,9 +156,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
   // Header row
   const HEADER_ROW = [
     { value: 'Day', fontWeight: 'bold' },
-    { value: 'Total Pages For Day', fontWeight: 'bold' },
-    { value: 'Start Page for Day', fontWeight: 'bold' },
-    { value: 'End Page for Day', fontWeight: 'bold' },
+    { value: 'Target for the Day', fontWeight: 'bold' },
     ...activeSalahs.map(salah => ({
       value: salah.charAt(0).toUpperCase() + salah.slice(1),
       fontWeight: 'bold'
@@ -168,10 +166,8 @@ export function buildExcelTable(schedule: DaySchedule[]) {
   // Data rows
   const DATA_ROWS = schedule.map(day => {
     const baseCells = [
-      { type: Number, value: day.day },
-      { type: Number, value: day.totalPages },
-      { type: String, value: day.start },
-      { type: String, value: day.end }
+      { type: Number, value: day.day,  },
+      { type: String, value: formatSalahCell(day), wrap: true },
     ]
 
     const salahCells = activeSalahs.map(salah => {
@@ -179,15 +175,31 @@ export function buildExcelTable(schedule: DaySchedule[]) {
 
       return {
         type: String,
-        value: salahData ? formatSalahCell(salahData) : ''
+        value: salahData ? formatSalahCell(salahData) : '',
+        wrap: true 
       }
     })
 
     return [...baseCells, ...salahCells]
   })
 
-  // 4️⃣ Final structure for write-excel-file
+  // Final structure for write-excel-file
   return [HEADER_ROW, ...DATA_ROWS]
 }
 
+const COLUMN_WIDTH = 35;
+export const columnConfig = [
+  {},
+  { width: COLUMN_WIDTH },
+  { width: COLUMN_WIDTH },
+  { width: COLUMN_WIDTH },
+  { width: COLUMN_WIDTH },
+  { width: COLUMN_WIDTH },
+  { width: COLUMN_WIDTH },
+  { width: COLUMN_WIDTH }
+];
+
+export function getScheduleFileName({ startJuz, endJuz, dayCount}: {startJuz: number, endJuz: number, dayCount: number}) {
+  return `Juz ${startJuz} to ${endJuz} in ${dayCount} days`;
+}
 

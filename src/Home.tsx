@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button } from '@radix-ui/themes';
+import writeXlsxFile from 'write-excel-file'
 
 import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
 import quranImage from "@/assets/images/quran.svg";
-import { buildExcelTable, generateRevisionSchedule } from './utils';
+import { buildExcelTable, columnConfig, generateRevisionSchedule, getScheduleFileName } from './utils';
 
 const defaultFormValues: ScheduleForm = {
   rangeStart: FIRST_JUZ_NUMBER,
@@ -75,12 +76,22 @@ const Home = () => {
 
     if (!isDaysToCompleteValid || !isSalahSelectionValid) return;
 
-    const schedule = generateRevisionSchedule(data)
-    const spreadsheetData = buildExcelTable(schedule)
+    try {
+      const schedule = generateRevisionSchedule(data)
+      const spreadsheetData = buildExcelTable(schedule)
 
-    console.log(schedule);
-    console.log(spreadsheetData);
-    
+      writeXlsxFile(spreadsheetData as any, {
+        columns: columnConfig,
+        fileName: getScheduleFileName({ startJuz: data?.rangeStart, endJuz: data?.rangeEnd, dayCount: Number(data?.daysToComplete) })
+      })
+
+      console.log(schedule);
+      console.log(spreadsheetData);
+    } catch (e) {
+      alert('An error occurred! Please try again.')
+      console.log(e);
+    }
+
   }
 
   return (
