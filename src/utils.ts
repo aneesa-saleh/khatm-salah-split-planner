@@ -138,7 +138,9 @@ export function formatSalahCell(salahData: {
   totalPages: number
 }) {
   if (salahData?.totalPages === 0) return '';
-  
+
+  if (salahData?.totalPages === 1) return `[1 page]\n${salahData?.start}`
+
   return `[${salahData?.totalPages} ${salahData?.totalPages == 1 ? 'page' : 'pages'}]\n${salahData?.start} to\n${salahData?.end}`
 }
 
