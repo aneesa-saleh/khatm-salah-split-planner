@@ -6,7 +6,7 @@ import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
 import quranImage from "@/assets/images/quran.svg";
-import { generateRevisionSchedule } from './utils';
+import { buildExcelTable, generateRevisionSchedule } from './utils';
 
 const defaultFormValues: ScheduleForm = {
   rangeStart: FIRST_JUZ_NUMBER,
@@ -75,7 +75,12 @@ const Home = () => {
 
     if (!isDaysToCompleteValid || !isSalahSelectionValid) return;
 
-    console.log(generateRevisionSchedule(data));
+    const schedule = generateRevisionSchedule(data)
+    const spreadsheetData = buildExcelTable(schedule)
+
+    console.log(schedule);
+    console.log(spreadsheetData);
+    
   }
 
   return (

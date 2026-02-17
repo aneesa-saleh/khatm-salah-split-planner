@@ -134,3 +134,60 @@ export function generateRevisionSchedule(
 
   return schedule;
 }
+
+/* table */
+
+export function formatSalahCell(salahData: {
+  start: string
+  end: string
+  totalPages: number
+}) {
+  return `${salahData.start} to ${salahData.end} (${salahData.totalPages} pages)`
+}
+
+const SALAHS = ['tahajjud', 'fajr', 'zuhr', 'asr', 'maghrib', 'isha'] as const
+
+export function buildExcelTable(schedule: DaySchedule[]) {
+  // Determine which salah columns are actually used
+  const activeSalahs = SALAHS.filter(salah =>
+    schedule.some(day => day[salah])
+  )
+
+  // Header row
+  const HEADER_ROW = [
+    { value: 'Day', fontWeight: 'bold' },
+    { value: 'Total Pages For Day', fontWeight: 'bold' },
+    { value: 'Start Page for Day', fontWeight: 'bold' },
+    { value: 'End Page for Day', fontWeight: 'bold' },
+    ...activeSalahs.map(salah => ({
+      value: salah.charAt(0).toUpperCase() + salah.slice(1),
+      fontWeight: 'bold'
+    }))
+  ]
+
+  // Data rows
+  const DATA_ROWS = schedule.map(day => {
+    const baseCells = [
+      { type: Number, value: day.day },
+      { type: Number, value: day.totalPages },
+      { type: String, value: day.start },
+      { type: String, value: day.end }
+    ]
+
+    const salahCells = activeSalahs.map(salah => {
+      const salahData = day[salah]
+
+      return {
+        type: String,
+        value: salahData ? formatSalahCell(salahData) : ''
+      }
+    })
+
+    return [...baseCells, ...salahCells]
+  })
+
+  // 4️⃣ Final structure for write-excel-file
+  return [HEADER_ROW, ...DATA_ROWS]
+}
+
+
