@@ -137,7 +137,7 @@ export function formatSalahCell(salahData: {
   end: string
   totalPages: number
 }) {
-  return `[${salahData.totalPages} pages]\n${salahData?.start} to\n${salahData?.end}`
+  return `[${salahData?.totalPages} ${salahData?.totalPages == 1 ? 'page' : 'pages'}]\n${salahData?.start} to\n${salahData?.end}`
 }
 
 const SALAHS = ['tahajjud', 'fajr', 'zuhr', 'asr', 'maghrib', 'isha'] as const
