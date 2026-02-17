@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button } from '@radix-ui/themes';
 
-import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER } from "../data/quranData";
+import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
+import quranImage from "@/assets/images/quran.svg";
 import { generateRevisionSchedule } from './utils';
 
 const defaultFormValues: ScheduleForm = {
@@ -55,7 +56,7 @@ const Home = () => {
       return false
     }
 
-    if (daysToComplete > 365
+    if (daysToComplete > MAX_COMPLETION_DAYS
     ) {
       setDaysToCompleteError('Enter a number of days within 1 year (365 days or less)')
       return false
@@ -79,25 +80,31 @@ const Home = () => {
 
   return (
     <>
-      <main className="flex flex-col gap-2 h-screen w-screen items-center justify-center m-5">
-        <h1>Khatm by Salah Planner</h1>
+      <main className="flex flex-col gap-2.5 h-screen w-screen items-center justify-center m-5">
+        <div className="flex gap-1.5 items-center">
+          <img src={quranImage} width={50} height={50} alt="" /> {salahSelectionError}
+          <h1 className="whitespace-nowrap text-2xl! sm:text-4xl! tracking-wider text-center font-extrabold">Khatm by Salah Planner</h1>
+        </div>
         <div>
-          <p>Create Qur'an Khatm Schedule planned for each day</p>
+          <p>Create a Qur'an Khatm Schedule anchored to your daily prayers</p>
         </div>
 
-        <section className="flex items-center justify-center w-full mt-5">
-          <form onSubmit={form.handleSubmit(processFormData)} className="flex flex-col gap-7 w-100 items-center justify-center">
+        <section className="flex flex-col gap-4 items-center justify-center w-full mt-7">
+          <h2 className="font-bold">Customis your plan:</h2>
+          <form onSubmit={form.handleSubmit(processFormData)} className="flex flex-col gap-7 max-w-125 w-full sm:w-125 items-center justify-center">
             <div className='w-full flex flex-col gap-1'>
               <p className="text-sm">Select Juz Range:</p>
               <div className="w-full flex gap-2 items-center whitespace-nowrap">
                 <p>Juz {form?.watch('rangeStart')}</p>
                 <Slider
+                  className="[&_.rt-SliderRange]:bg-[#CF9F30]!"
                   onValueChange={handleJuzRangeChange}
                   defaultValue={[form?.watch('rangeStart'), form?.watch('rangeEnd')]}
                   step={1}
                   min={FIRST_JUZ_NUMBER}
                   max={LAST_JUZ_NUMBER}
                   radius="small"
+                  color="gold"
                 />
                 <p>Juz {form?.watch('rangeEnd')}</p>
               </div>
@@ -110,6 +117,7 @@ const Home = () => {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <label className="flex items-center gap-1.5">
                   <Checkbox
+                    color="amber"
                     checked={form.watch('tahajjudChecked')}
                     onCheckedChange={(checked => form.setValue('tahajjudChecked', checked as boolean))}
                   />
@@ -118,6 +126,7 @@ const Home = () => {
 
                 <label className="flex items-center gap-1.5">
                   <Checkbox
+                    color="amber"
                     checked={form.watch('fajrChecked')}
                     onCheckedChange={(checked => form.setValue('fajrChecked', checked as boolean))}
                   />
@@ -126,6 +135,7 @@ const Home = () => {
 
                 <label className="flex items-center gap-1.5">
                   <Checkbox
+                    color="amber"
                     checked={form.watch('zuhrChecked')}
                     onCheckedChange={(checked => form.setValue('zuhrChecked', checked as boolean))}
                   />
@@ -134,6 +144,7 @@ const Home = () => {
 
                 <label className="flex items-center gap-1.5">
                   <Checkbox
+                    color="amber"
                     checked={form.watch('asrChecked')}
                     onCheckedChange={(checked => form.setValue('asrChecked', checked as boolean))}
                   />
@@ -142,6 +153,7 @@ const Home = () => {
 
                 <label className="flex items-center gap-1.5">
                   <Checkbox
+                    color="amber"
                     checked={form.watch('maghribChecked')}
                     onCheckedChange={(checked => form.setValue('maghribChecked', checked as boolean))}
                   />
@@ -150,6 +162,7 @@ const Home = () => {
 
                 <label className="flex items-center gap-1.5">
                   <Checkbox
+                    color="amber"
                     checked={form.watch('ishaChecked')}
                     onCheckedChange={(checked => form.setValue('ishaChecked', checked as boolean))}
                   />
@@ -179,12 +192,14 @@ const Home = () => {
               {
                 Boolean(daysToCompleteError) &&
                 <p className="absolute -bottom-5 text-sm text-red-500 flex items-center">
-                  <img src={errorIcon} width={16} height={16} alt="" /> {daysToCompleteError}
+                  <img src={errorIcon} width={20} height={20} alt="" /> {daysToCompleteError}
                 </p>
               }
             </label>
 
-            <Button type="submit" className="flex w-full cursor-pointer!">Generate Completion Schedule</Button>
+            <Button color="gold" type="submit" className="flex w-full cursor-pointer! !bg-[#CF9F30]">
+              Generate Completion Schedule
+            </Button>
           </form>
         </section>
 
