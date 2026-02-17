@@ -86,11 +86,11 @@ const Home = () => {
           <h1 className="whitespace-nowrap text-2xl! sm:text-4xl! tracking-wider text-center font-extrabold">Khatm by Salah Planner</h1>
         </div>
         <div>
-          <p>Create a Qur'an Khatm Schedule anchored to your daily prayers</p>
+          <p>Create a Qur'an Khatm (Completion) Schedule anchored to your daily prayers</p>
         </div>
 
         <section className="flex flex-col gap-4 items-center justify-center w-full mt-7">
-          <h2 className="font-bold">Customis your plan:</h2>
+          <h2 className="font-bold">Customise your plan:</h2>
           <form onSubmit={form.handleSubmit(processFormData)} className="flex flex-col gap-7 max-w-125 w-full sm:w-125 items-center justify-center">
             <div className='w-full flex flex-col gap-1'>
               <p className="text-sm">Select Juz Range:</p>
