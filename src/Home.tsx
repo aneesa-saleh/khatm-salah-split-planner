@@ -197,7 +197,7 @@ const Home = () => {
               }
             </label>
 
-            <Button color="gold" type="submit" className="flex w-full cursor-pointer! !bg-[#CF9F30]">
+            <Button color="gold" type="submit" className="flex w-full cursor-pointer! bg-[#CF9F30]!">
               Generate Completion Schedule
             </Button>
           </form>

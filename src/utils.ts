@@ -50,7 +50,7 @@ export function splitEvenly(total: number, parts: number): number[] {
 
 export function generateRevisionSchedule(
   form: ScheduleForm,
-  pageSplitPreset?: number,
+  // pageSplitPreset?: number,
 ): DaySchedule[] {
   const startJuz = form.rangeStart;
   const endJuz = form.rangeEnd;
