@@ -40,9 +40,6 @@ const Home = () => {
     form.setValue('rangeStart', range[0])
     form.setValue('rangeEnd', range[1])
   }
-
-  console.log(`[form?.watch('rangeStart'), form?.watch('rangeEnd')]`);
-  console.log([form?.watch('rangeStart'), form?.watch('rangeEnd')]);
   
 
   const handlePageGroupChange = (newValue: PageGroupType) => {
