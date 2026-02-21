@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, type ChangeEventHandler } from 'react';
 import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button, RadioCards } from '@radix-ui/themes';
 import writeXlsxFile from 'write-excel-file'
@@ -33,13 +33,38 @@ const Home = () => {
 
   const pageGroupLabel = PageGroupDisplayName[pageGroupType] || ''
 
+  const rangeMax = PageGroupLimit[pageGroupType].max || 1;
+  const rangeMin = PageGroupLimit[pageGroupType].min || 1;
+
+  const rangeStartFormValue = form.watch('rangeStart')
+  const rangeEndFormValue = form.watch('rangeEnd')
+
+  const [rangeStartInputValue, setRangeStartInputValue] = useState<number | string>(form?.watch('rangeStart'));
+  const [rangeEndInputValue, setRangeEndInputValue] = useState<number | string>(form?.watch('rangeEnd'));
+
+  const rangeStartInputAsNumber = Number(rangeStartInputValue);
+  const rangeEndInputAsNumber = Number(rangeEndInputValue);
+
+  const isRangeStartInputValid = Number.isFinite(rangeStartInputAsNumber)
+    &&  rangeStartInputAsNumber <= rangeMax
+    && rangeStartInputAsNumber >= rangeMin
+
+  const isRangeEndInputValid = Number.isFinite(rangeEndInputAsNumber)
+    &&  rangeEndInputAsNumber <= rangeMax
+    && rangeEndInputAsNumber >= rangeMin
+
+  // generate range input error
+  // not setting to state because it'll be set and cleared on the fly. maybe refactor later
+
+  let rangeInputError = ''
+
+  if (!isRangeStartInputValid) rangeInputError = `Invalid Start ${pageGroupLabel} (Enter a number from ${rangeMin} to ${rangeMax})`;
+  else if (!isRangeEndInputValid) rangeInputError = `Invalid end ${pageGroupLabel}`;
+  else if (rangeStartInputAsNumber > rangeEndFormValue) `Start ${pageGroupLabel} needs to be less than or same as end ${pageGroupLabel}`;
+  else if (rangeEndInputAsNumber < rangeStartFormValue) `End ${pageGroupLabel} needs to be greater than or same as start ${pageGroupLabel}`;
+
   const [salahSelectionError, setSalahSelectionError] = useState('');
   const [daysToCompleteError, setDaysToCompleteError] = useState('');
-
-  const handleRangeChange = (range: number[]) => {
-    form.setValue('rangeStart', range[0])
-    form.setValue('rangeEnd', range[1])
-  }
 
   /* TODO: Refactor this to a util(s) */
   // Group means a group of pages which are pages, juzs, etc.
@@ -64,7 +89,7 @@ const Home = () => {
   const firstPageInRangeEndGroup = QURAN_DATA?.pages?.references[fistPageNumberInRangeEndGroup - 1]?.start
   const firstSurahInRangeEndGroup = firstPageInRangeEndGroup?.surah;
   const firstVerseInRangeEndGroup = firstPageInRangeEndGroup?.ayah;
-  
+
   /* -- end of util(s) -- */
 
   const rangeStartSurahName = getSurahName(firstSurahInRangeStartGroup);
@@ -83,8 +108,40 @@ const Home = () => {
     form.setValue('rangeEnd', newRangeMax)
   }
 
-  const rangeMax = PageGroupLimit[pageGroupType].max || 1;
-  const rangeMin = PageGroupLimit[pageGroupType].min || 1;
+  const handleRangeChange = (range: number[]) => {
+    form.setValue('rangeStart', range[0])
+    form.setValue('rangeEnd', range[1])
+  }
+
+  const handleRangeStartInputChange: ChangeEventHandler<HTMLInputElement, HTMLInputElement> = (e) => {
+    const value = e?.target?.value;
+    setRangeStartInputValue(value);
+
+    const valueAsNumber = Number(value);
+    
+    if (Number.isFinite(valueAsNumber)) {
+      form.setValue('rangeStart', valueAsNumber);
+    } else {
+      form.setValue('rangeStart', 0);
+    }
+  }
+
+  const handleRangeEndInputChange: ChangeEventHandler<HTMLInputElement, HTMLInputElement> = (e) => {
+    const value = e?.target?.value;
+    setRangeEndInputValue(value);
+
+    const valueAsNumber = Number(value);
+    
+    if (Number.isFinite(valueAsNumber)) {
+      form.setValue('rangeEnd', valueAsNumber);
+    } else {
+      form.setValue('rangeStart', 0);
+    }
+  }
+
+  const validateJuzRange = () => {
+    return Boolean(rangeStartFormValue) && Boolean(rangeEndFormValue)
+  }
 
   const validateSalahSelection = () => {
     if (!form.watch('tahajjudChecked') &&
@@ -123,13 +180,22 @@ const Home = () => {
     setDaysToCompleteError('');
     setSalahSelectionError('');
 
+    const isJuzRangeValid = validateJuzRange();
     const isSalahSelectionValid = validateSalahSelection();
     const isDaysToCompleteValid = validateDaysToComplete();
 
-    if (!isDaysToCompleteValid || !isSalahSelectionValid) return;
+    if (!isDaysToCompleteValid || !isSalahSelectionValid || !isJuzRangeValid) return;
+
+    /* if the user enters a min > max or max > min, just flip the range to be valid */
+    const rangeStart = Math.min(data?.rangeStart, data?.rangeEnd);
+    const rangeEnd = Math.max(data?.rangeStart, data?.rangeEnd)
 
     try {
-      const schedule = generateFixedTimeRevisionSchedule(data, pageGroupType)
+      const schedule = generateFixedTimeRevisionSchedule({
+          ...data, rangeStart, rangeEnd
+        },
+        pageGroupType
+      )
       const spreadsheetData = buildExcelTable(schedule)
 
       // user may enter a number too large to fill all the days
@@ -140,8 +206,8 @@ const Home = () => {
       writeXlsxFile(spreadsheetData as any, {
         columns: columnConfig,
         fileName: getScheduleFileName({
-          rangeStart: data?.rangeStart,
-          rangeEnd: data?.rangeEnd,
+          rangeStart,
+          rangeEnd,
           dayCount: Math.min(Number(data?.daysToComplete), dataRowCount),
           pageGroupType
         }),
@@ -152,8 +218,19 @@ const Home = () => {
       alert('An error occurred! Please try again.')
       console.log(e);
     }
-
   }
+
+  useEffect(() => {
+    if (Number(rangeStartInputValue) !== Number(rangeStartFormValue)) {
+      setRangeStartInputValue(rangeStartFormValue);
+    }
+  }, [rangeStartFormValue])
+
+  useEffect(() => {
+    if (Number(rangeEndInputValue) !== Number(rangeEndFormValue)) {
+      setRangeEndInputValue(rangeEndFormValue);
+    }
+  }, [rangeEndFormValue])
 
   return (
     <>
@@ -189,36 +266,61 @@ const Home = () => {
           <form onSubmit={form.handleSubmit(processFormData)} className="flex flex-col gap-7 max-w-125 w-full sm:w-125 items-center justify-center">
             <div className='w-full flex flex-col gap-1'>
               <p className="text-sm">Select Range:</p>
-              <div className="flex flex-col">
+              <div className="flex flex-col relative">
                 <div className="w-full flex gap-2 items-center whitespace-nowrap">
-                <p className="font-semibold">{pageGroupLabel} {form?.watch('rangeStart')}</p>
-                
-                <Slider
-                  className="[&_.rt-SliderRange]:bg-[#CF9F30]!"
-                  onValueChange={handleRangeChange}
-                  value={[form?.watch('rangeStart'), form?.watch('rangeEnd')]}
-                  step={1}
-                  min={rangeMin}
-                  max={rangeMax}
-                  radius="small"
-                  color="gold"
-                />
-                <p className="font-semibold">{pageGroupLabel} {form?.watch('rangeEnd')}</p>
-              </div>
-              <div className="flex w-full justify-between">
-                <div className="flex flex-col justify-start items-start whitespace-nowrap">
-                  <p className="text-xs">{rangeStartSurahName}</p>
-                  <p className="text-xs">({rangeStartVerseReference})</p>
-                </div>
-                <div className="flex flex-col justify-end items-end whitespace-nowrap">
-                  <p className="text-xs">{rangeEndSurahName}</p>
-                  <p className="text-xs">({rangeEndVerseReference})</p>
-                </div>
-              </div>
-              </div>
-              
-            </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm">{pageGroupLabel}</span>
+                    <TextField.Root
+                      type="number"
+                      value={rangeStartInputValue}
+                      min={rangeMin}
+                      max={rangeMax}
+                      onChange={handleRangeStartInputChange}
+                      className="w-11"
+                    />
+                  </div>
 
+                  <Slider
+                    className="[&_.rt-SliderRange]:bg-[#CF9F30]!"
+                    onValueChange={handleRangeChange}
+                    value={[form?.watch('rangeStart') || 0, form?.watch('rangeEnd') || 0]}
+                    step={1}
+                    min={rangeMin}
+                    max={rangeMax}
+                    radius="small"
+                    color="gold"
+                  />
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm">{pageGroupLabel}</span>
+                    <TextField.Root
+                      type="number"
+                      value={rangeEndInputValue}
+                      min={rangeMin}
+                      max={rangeMax}
+                      onChange={handleRangeEndInputChange}
+                      className="w-11 text-center"
+                    />
+                  </div>
+                </div>
+                <div className="flex w-full justify-between min-h-8">
+                  {isRangeStartInputValid ? <div className="flex flex-col justify-start items-start whitespace-nowrap">
+                    <p className="text-xs">{rangeStartSurahName}</p>
+                    <p className="text-xs">({rangeStartVerseReference})</p>
+                  </div> : <div />}
+                  {isRangeEndInputValid ? <div className="flex flex-col justify-end items-end whitespace-nowrap">
+                    <p className="text-xs">{rangeEndSurahName}</p>
+                    <p className="text-xs">({rangeEndVerseReference})</p>
+                  </div> : <div />}
+                </div>
+
+                {
+                  Boolean(rangeInputError) &&
+                  <p className="absolute -bottom-5 text-sm text-red-500 flex items-center">
+                    <img src={errorIcon} width={20} height={20} alt="error" /> {rangeInputError}
+                  </p>
+                }
+              </div>
+            </div>
 
             <div className="w-full flex flex-col gap-2 relative">
               <p className="text-sm">Choose Salah for completion:</p>
@@ -282,7 +384,7 @@ const Home = () => {
               {
                 Boolean(salahSelectionError) &&
                 <p className="absolute -bottom-5 text-sm text-red-500 flex items-center">
-                  <img src={errorIcon} width={16} height={16} alt="" /> {salahSelectionError}
+                  <img src={errorIcon} width={20} height={20} alt="error" /> {salahSelectionError}
                 </p>
               }
             </div>
