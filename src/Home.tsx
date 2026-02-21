@@ -59,7 +59,7 @@ const Home = () => {
   let rangeInputError = ''
 
   if (!isRangeStartInputValid) rangeInputError = `Invalid Start ${pageGroupLabel} (Enter a number from ${rangeMin} to ${rangeMax})`;
-  else if (!isRangeEndInputValid) rangeInputError = `Invalid end ${pageGroupLabel}`;
+  else if (!isRangeEndInputValid) rangeInputError = `Invalid end ${pageGroupLabel} (Enter a number from ${rangeMin} to ${rangeMax})`;
   else if (rangeStartInputAsNumber > rangeEndFormValue) `Start ${pageGroupLabel} needs to be less than or same as end ${pageGroupLabel}`;
   else if (rangeEndInputAsNumber < rangeStartFormValue) `End ${pageGroupLabel} needs to be greater than or same as start ${pageGroupLabel}`;
 
