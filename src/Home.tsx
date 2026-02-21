@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button, RadioCards } from '@radix-ui/themes';
 import writeXlsxFile from 'write-excel-file'
 
-import QURAN_DATA, { FIRST_JUZ_NUMBER, FIRST_PAGE_NUMBER, FIRST_VERSE_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
+import QURAN_DATA, { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
 import quranImage from "@/assets/images/quran.svg";
