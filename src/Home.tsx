@@ -414,7 +414,7 @@ const Home = () => {
           </form>
         </section>
 
-        <footer className="flex gap-3 fixed bottom-0 p-2 text-xs bg-[rgba(255,255,255,0.5)] items-center">
+        <footer className="flex gap-3 fixed bottom-0 p-2 text-xs bg-[rgba(255,255,255,0.8)] items-center">
           <span>
             <a target="_blank" href="https://github.com/aneesa-saleh/khatm-salah-split-planner/issues" className="flex gap-1 items-center">
               <img src={githubIcon} width={20} height={20} alt="Link to Github" /> <span className="tracking-wider">Feedback/Contribution</span>
