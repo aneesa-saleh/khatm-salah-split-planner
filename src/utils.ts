@@ -219,6 +219,6 @@ export function getScheduleFileName(
   const dayLabel = dayCount === 1 ? 'day' : 'days';
   if (rangeStart === rangeEnd) return `${pageGroupLabel} ${rangeStart} in ${dayCount} ${dayLabel}`;
 
-  return `Juz ${rangeStart} to ${rangeEnd} in ${dayCount} ${dayLabel}`;
+  return `${pageGroupLabel} ${rangeStart} to ${rangeEnd} in ${dayCount} ${dayLabel}`;
 }
 
