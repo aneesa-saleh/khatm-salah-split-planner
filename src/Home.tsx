@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from "react-hook-form";
-import { Slider, Checkbox, TextField, Button } from '@radix-ui/themes';
+import { Slider, Checkbox, TextField, Button, RadioCards } from '@radix-ui/themes';
 import writeXlsxFile from 'write-excel-file'
 
 import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
@@ -8,7 +8,9 @@ import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
 import quranImage from "@/assets/images/quran.svg";
 import githubIcon from "@/assets/icons/github.svg";
-import { buildExcelTable, columnConfig, generateRevisionSchedule, getScheduleFileName } from './utils';
+import { buildExcelTable, columnConfig, generateFixedTimeRevisionSchedule, getScheduleFileName } from './utils';
+import { PageGroup, type PageGroupType } from './typing';
+import { PageGroupDisplayName, PageGroupLimit } from './constants';
 
 const defaultFormValues: ScheduleForm = {
   rangeStart: FIRST_JUZ_NUMBER,
@@ -27,13 +29,34 @@ const Home = () => {
     defaultValues: defaultFormValues
   });
 
+  const [pageGroupType, setPageGroupType] = useState<PageGroupType>(PageGroup.Juz);
+
+  const pageGroupLabel = PageGroupDisplayName[pageGroupType] || ''
+
   const [salahSelectionError, setSalahSelectionError] = useState('');
   const [daysToCompleteError, setDaysToCompleteError] = useState('');
 
-  const handleJuzRangeChange = (range: number[]) => {
+  const handleRangeChange = (range: number[]) => {
     form.setValue('rangeStart', range[0])
     form.setValue('rangeEnd', range[1])
   }
+
+  console.log(`[form?.watch('rangeStart'), form?.watch('rangeEnd')]`);
+  console.log([form?.watch('rangeStart'), form?.watch('rangeEnd')]);
+  
+
+  const handlePageGroupChange = (newValue: PageGroupType) => {
+    setPageGroupType(newValue as PageGroupType)
+
+    const newRangeMax = PageGroupLimit[newValue].max || 1;
+    const newRangeMin = PageGroupLimit[newValue].min || 1;
+
+    form.setValue('rangeStart', newRangeMin)
+    form.setValue('rangeEnd', newRangeMax)
+  }
+
+  const rangeMax = PageGroupLimit[pageGroupType].max || 1;
+  const rangeMin = PageGroupLimit[pageGroupType].min || 1;
 
   const validateSalahSelection = () => {
     if (!form.watch('tahajjudChecked') &&
@@ -78,18 +101,21 @@ const Home = () => {
     if (!isDaysToCompleteValid || !isSalahSelectionValid) return;
 
     try {
-      const schedule = generateRevisionSchedule(data)
+      const schedule = generateFixedTimeRevisionSchedule(data, pageGroupType)
       const spreadsheetData = buildExcelTable(schedule)
 
       // user may enter a number too large to fill all the days
       // the spreadsheet will have the blank rows trimmed, so subtract the header row to get the data row count
       const dataRowCount = spreadsheetData?.length - 1;
-      
+
 
       writeXlsxFile(spreadsheetData as any, {
         columns: columnConfig,
         fileName: getScheduleFileName({
-          startJuz: data?.rangeStart, endJuz: data?.rangeEnd, dayCount: Math.min(Number(data?.daysToComplete), dataRowCount)
+          rangeStart: data?.rangeStart,
+          rangeEnd: data?.rangeEnd,
+          dayCount: Math.min(Number(data?.daysToComplete), dataRowCount),
+          pageGroupType
         }),
         stickyRowsCount: 1,
         stickyColumnsCount: 1
@@ -112,24 +138,42 @@ const Home = () => {
           <p>Create a Qur'an Khatm (Completion) Schedule anchored to your daily prayers</p>
         </div>
 
-        <section className="flex flex-col gap-4 items-center justify-center w-full mt-7">
+        <section className="flex flex-col gap-3 items-center justify-center w-full mt-7">
           <h2 className="font-bold">Customise your plan:</h2>
+          <RadioCards.Root
+            className="h-8 flex! justify-center items-center"
+            color="amber"
+            value={pageGroupType}
+            columns={{ initial: "1", sm: "3" }}
+            onValueChange={handlePageGroupChange}
+          >
+            <RadioCards.Item value={PageGroup.Juz} className="cursor-pointer!">
+              <div className="flex flex-col">
+                <p>Juz Range</p>
+              </div>
+            </RadioCards.Item>
+            <RadioCards.Item value={PageGroup.Page} className="cursor-pointer!">
+              <div className="flex flex-col">
+                <p>Page Range</p>
+              </div>
+            </RadioCards.Item>
+          </RadioCards.Root>
           <form onSubmit={form.handleSubmit(processFormData)} className="flex flex-col gap-7 max-w-125 w-full sm:w-125 items-center justify-center">
             <div className='w-full flex flex-col gap-1'>
-              <p className="text-sm">Select Juz Range:</p>
+              <p className="text-sm">Select Range:</p>
               <div className="w-full flex gap-2 items-center whitespace-nowrap">
-                <p>Juz {form?.watch('rangeStart')}</p>
+                <p>{pageGroupLabel} {form?.watch('rangeStart')}</p>
                 <Slider
                   className="[&_.rt-SliderRange]:bg-[#CF9F30]!"
-                  onValueChange={handleJuzRangeChange}
-                  defaultValue={[form?.watch('rangeStart'), form?.watch('rangeEnd')]}
+                  onValueChange={handleRangeChange}
+                  value={[form?.watch('rangeStart'), form?.watch('rangeEnd')]}
                   step={1}
-                  min={FIRST_JUZ_NUMBER}
-                  max={LAST_JUZ_NUMBER}
+                  min={rangeMin}
+                  max={rangeMax}
                   radius="small"
                   color="gold"
                 />
-                <p>Juz {form?.watch('rangeEnd')}</p>
+                <p>{pageGroupLabel} {form?.watch('rangeEnd')}</p>
               </div>
             </div>
 

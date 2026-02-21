@@ -1,35 +1,37 @@
 import QURAN_DATA, { FIRST_JUZ_NUMBER, FIRST_PAGE_NUMBER, LAST_JUZ_NUMBER, LAST_PAGE_NUMBER } from "../data/quranData";
+import { PageGroupDisplayName } from "./constants";
+import { PageGroup, type PageGroupType } from "./typing";
 import type { JuzListItem, PageListItem } from "./typing/quranData";
 import type { DaySchedule, SalahRange } from "./typing/schedule";
 import type { ScheduleForm } from "./typing/scheduleForm";
 
 export function getJuzInfo(juzNumber: number): JuzListItem {
-    if (juzNumber > LAST_JUZ_NUMBER || juzNumber < FIRST_JUZ_NUMBER) return {start: { ayah: 1, page: 1, surah: 1}, end: { ayah: 1, page: 1, surah: 1}};
+  if (juzNumber > LAST_JUZ_NUMBER || juzNumber < FIRST_JUZ_NUMBER) return { start: { ayah: 1, page: 1, surah: 1 }, end: { ayah: 1, page: 1, surah: 1 } };
 
-    return QURAN_DATA?.juzs?.references[juzNumber - 1];
+  return QURAN_DATA?.juzs?.references[juzNumber - 1];
 }
 
 export function getPageInfo(pageNumber: number): PageListItem {
-    if (pageNumber > LAST_PAGE_NUMBER || pageNumber < FIRST_PAGE_NUMBER) return QURAN_DATA?.pages?.references[0];
+  if (pageNumber > LAST_PAGE_NUMBER || pageNumber < FIRST_PAGE_NUMBER) return QURAN_DATA?.pages?.references[0];
 
-    return QURAN_DATA?.pages?.references[pageNumber - 1];
+  return QURAN_DATA?.pages?.references[pageNumber - 1];
 }
 
 
-export function getSurahName (surahNumber: number) {
-    if (surahNumber > 114 || surahNumber < 1) return "";
+export function getSurahName(surahNumber: number) {
+  if (surahNumber > 114 || surahNumber < 1) return "";
 
-    return QURAN_DATA?.surahs?.references[surahNumber - 1]?.englishName;
+  return QURAN_DATA?.surahs?.references[surahNumber - 1]?.englishName;
 }
 
-export function formatPageVerseRange (pageNumber: number) {
+export function formatPageVerseRange(pageNumber: number) {
   const page = QURAN_DATA?.pages?.references[pageNumber - 1] || QURAN_DATA?.pages?.references[0]
 
   return `Page ${page?.page} (${getSurahName(
-        page?.start?.surah
-      )} ${page?.start?.surah}:${page?.start?.ayah} → ${getSurahName(
-        page?.end?.surah
-      )} ${page?.end?.surah}:${page?.end?.ayah})`
+    page?.start?.surah
+  )} ${page?.start?.surah}:${page?.start?.ayah} → ${getSurahName(
+    page?.end?.surah
+  )} ${page?.end?.surah}:${page?.end?.ayah})`
 }
 
 const SALAH_ORDER = [
@@ -58,20 +60,27 @@ export function splitEvenly(total: number, parts: number): number[] {
   );
 }
 
-export function generateRevisionSchedule(
+export function generateFixedTimeRevisionSchedule(
   form: ScheduleForm,
-  // pageSplitPreset?: number,
+  pageGroupType: PageGroupType
 ): DaySchedule[] {
-  const startJuz = form.rangeStart;
-  const endJuz = form.rangeEnd;
+  const rangeStart = form.rangeStart;
+  const rangeEnd = form.rangeEnd;
   const days = Number(form.daysToComplete);
 
-  // Resolve page range
-  const startJuzInfo = getJuzInfo(startJuz);
-  const endJuzInfo = getJuzInfo(endJuz);
+  let startPage = FIRST_PAGE_NUMBER;
+  let endPage = LAST_PAGE_NUMBER;
 
-  const startPage = startJuzInfo.start.page;
-  const endPage = endJuzInfo.end.page;
+  if (pageGroupType === PageGroup.Juz) {
+    const startJuzInfo = getJuzInfo(rangeStart);
+    const endJuzInfo = getJuzInfo(rangeEnd);
+
+    startPage = startJuzInfo.start.page;
+    endPage = endJuzInfo.end.page;
+  } else if (pageGroupType === PageGroup.Page) {
+    startPage = rangeStart;
+    endPage = rangeEnd
+  }
 
   const totalPages = endPage - startPage + 1;
 
@@ -169,7 +178,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
     if (day?.totalPages === 0) return;
 
     const baseCells = [
-      { type: String, value: `Day ${day.day}`,  },
+      { type: String, value: `Day ${day.day}`, },
       { type: String, value: formatSalahCell(day), wrap: true },
     ]
 
@@ -179,7 +188,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
       return {
         type: String,
         value: salahData ? formatSalahCell(salahData) : '',
-        wrap: true 
+        wrap: true
       }
     })
 
@@ -192,7 +201,7 @@ export function buildExcelTable(schedule: DaySchedule[]) {
 
 const COLUMN_WIDTH = 50;
 export const columnConfig = [
-  { width: 8 },
+  { width: 8 }, /* avoid making the first column too big */
   { width: COLUMN_WIDTH },
   { width: COLUMN_WIDTH },
   { width: COLUMN_WIDTH },
@@ -202,10 +211,14 @@ export const columnConfig = [
   { width: COLUMN_WIDTH }
 ];
 
-export function getScheduleFileName({ startJuz, endJuz, dayCount}: {startJuz: number, endJuz: number, dayCount: number}) {
+export function getScheduleFileName(
+  { rangeStart, rangeEnd, dayCount, pageGroupType }
+    :
+    { rangeStart: number, rangeEnd: number, dayCount: number, pageGroupType: PageGroupType }) {
+  const pageGroupLabel = PageGroupDisplayName[pageGroupType] || ''
   const dayLabel = dayCount === 1 ? 'day' : 'days';
-  if (startJuz === endJuz) return `Juz ${startJuz} in ${dayCount} ${dayLabel}`;
+  if (rangeStart === rangeEnd) return `${pageGroupLabel} ${rangeStart} in ${dayCount} ${dayLabel}`;
 
-  return `Juz ${startJuz} to ${endJuz} in ${dayCount} ${dayLabel}`;
+  return `Juz ${rangeStart} to ${rangeEnd} in ${dayCount} ${dayLabel}`;
 }
 
