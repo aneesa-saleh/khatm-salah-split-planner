@@ -3,12 +3,12 @@ import { useForm } from "react-hook-form";
 import { Slider, Checkbox, TextField, Button, RadioCards } from '@radix-ui/themes';
 import writeXlsxFile from 'write-excel-file'
 
-import { FIRST_JUZ_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
+import QURAN_DATA, { FIRST_JUZ_NUMBER, FIRST_PAGE_NUMBER, FIRST_VERSE_NUMBER, LAST_JUZ_NUMBER, MAX_COMPLETION_DAYS } from "../data/quranData";
 import type { ScheduleForm } from './typing/scheduleForm';
 import errorIcon from "@/assets/icons/error.png";
 import quranImage from "@/assets/images/quran.svg";
 import githubIcon from "@/assets/icons/github.svg";
-import { buildExcelTable, columnConfig, generateFixedTimeRevisionSchedule, getScheduleFileName } from './utils';
+import { buildExcelTable, columnConfig, generateFixedTimeRevisionSchedule, getScheduleFileName, getSurahName } from './utils';
 import { PageGroup, type PageGroupType } from './typing';
 import { PageGroupDisplayName, PageGroupLimit } from './constants';
 
@@ -40,7 +40,38 @@ const Home = () => {
     form.setValue('rangeStart', range[0])
     form.setValue('rangeEnd', range[1])
   }
+
+  /* TODO: Refactor this to a util(s) */
+  // Group means a group of pages which are pages, juzs, etc.
+  let firstPageNumberInRangeStartGroup = form.watch('rangeStart'); /* assume page as simplest case */
+
+  if (pageGroupType === PageGroup.Juz) {
+    firstPageNumberInRangeStartGroup = QURAN_DATA?.juzs?.references[form.watch('rangeStart') - 1]?.start?.page
+  }
+
+  const firstPageInRangeStartGroup = QURAN_DATA?.pages?.references[firstPageNumberInRangeStartGroup - 1]?.start
+  const firstSurahInRangeStartGroup = firstPageInRangeStartGroup?.surah;
+  const firstVerseInRangeStartGroup = firstPageInRangeStartGroup?.ayah;
+
+  // ----- //
+
+  let fistPageNumberInRangeEndGroup = form.watch('rangeEnd'); /* assume page as simplest case */
+
+  if (pageGroupType === PageGroup.Juz) {
+    fistPageNumberInRangeEndGroup = QURAN_DATA?.juzs?.references[form.watch('rangeEnd') - 1]?.start?.page
+  }
+
+  const firstPageInRangeEndGroup = QURAN_DATA?.pages?.references[fistPageNumberInRangeEndGroup - 1]?.start
+  const firstSurahInRangeEndGroup = firstPageInRangeEndGroup?.surah;
+  const firstVerseInRangeEndGroup = firstPageInRangeEndGroup?.ayah;
   
+  /* -- end of util(s) -- */
+
+  const rangeStartSurahName = getSurahName(firstSurahInRangeStartGroup);
+  const rangeEndSurahName = getSurahName(firstSurahInRangeEndGroup);
+
+  const rangeStartVerseReference = `${firstSurahInRangeStartGroup}:${firstVerseInRangeStartGroup}`;
+  const rangeEndVerseReference = `${firstSurahInRangeEndGroup}:${firstVerseInRangeEndGroup}`;
 
   const handlePageGroupChange = (newValue: PageGroupType) => {
     setPageGroupType(newValue as PageGroupType)
@@ -158,8 +189,10 @@ const Home = () => {
           <form onSubmit={form.handleSubmit(processFormData)} className="flex flex-col gap-7 max-w-125 w-full sm:w-125 items-center justify-center">
             <div className='w-full flex flex-col gap-1'>
               <p className="text-sm">Select Range:</p>
-              <div className="w-full flex gap-2 items-center whitespace-nowrap">
-                <p>{pageGroupLabel} {form?.watch('rangeStart')}</p>
+              <div className="flex flex-col">
+                <div className="w-full flex gap-2 items-center whitespace-nowrap">
+                <p className="font-semibold">{pageGroupLabel} {form?.watch('rangeStart')}</p>
+                
                 <Slider
                   className="[&_.rt-SliderRange]:bg-[#CF9F30]!"
                   onValueChange={handleRangeChange}
@@ -170,8 +203,20 @@ const Home = () => {
                   radius="small"
                   color="gold"
                 />
-                <p>{pageGroupLabel} {form?.watch('rangeEnd')}</p>
+                <p className="font-semibold">{pageGroupLabel} {form?.watch('rangeEnd')}</p>
               </div>
+              <div className="flex w-full justify-between">
+                <div className="flex flex-col justify-start items-start whitespace-nowrap">
+                  <p className="text-xs">{rangeStartSurahName}</p>
+                  <p className="text-xs">({rangeStartVerseReference})</p>
+                </div>
+                <div className="flex flex-col justify-end items-end whitespace-nowrap">
+                  <p className="text-xs">{rangeEndSurahName}</p>
+                  <p className="text-xs">({rangeEndVerseReference})</p>
+                </div>
+              </div>
+              </div>
+              
             </div>
 
 
